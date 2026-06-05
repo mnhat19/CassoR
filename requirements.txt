@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+sqlalchemy>=2.0
+aiosqlite
+pydantic>=2.0
+pydantic-settings
+python-dotenv
+structlog
+pandas
+openpyxl
+python-multipart
+alembic
+pytest
+pytest-asyncio
+httpx
+ruff

@@ -1,0 +1,41 @@
+name: Build APK (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      variant:
+        description: "Build variant"
+        required: false
+        default: "debug"
+        type: choice
+        options:
+          - debug
+          - release
+
+jobs:
+  build:
+    name: Build ${{ inputs.variant }} APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Make gradlew executable
+        working-directory: android-app
+        run: chmod +x gradlew
+
+      - name: Build APK
+        working-directory: android-app
+        run: ./gradlew assemble${{ inputs.variant == 'release' && 'Release' || 'Debug' }} --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cassor-payment-listener-${{ inputs.variant }}
+          path: android-app/app/build/outputs/apk/${{ inputs.variant }}/app-${{ inputs.variant }}.apk
+          retention-days: 90
