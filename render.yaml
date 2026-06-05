@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: cassor-hrm
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite+aiosqlite:///./cassor_hrm.db
+      - key: LOG_LEVEL
+        value: INFO
+      - key: PAYMENT_BANK_NAME
+        value: MB Bank
+      - key: PAYMENT_BANK_ACCOUNT
+        value: your_bank_account_number
+      - key: PAYMENT_BANK_ACCOUNT_NAME
+        value: YOUR NAME
+      - key: PAYMENT_AMOUNT_VND
+        value: "3000"
+      - key: PAYMENT_WEBHOOK_SECRET
+        generateValue: true
+      - key: PAYMENT_FILE_EXPIRY_SECONDS
+        value: "1800"
+      - key: CORS_ORIGINS
+        value: http://localhost:5173

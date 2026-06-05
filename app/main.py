@@ -42,12 +42,30 @@ logger = structlog.get_logger()
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting up CASSOR HRM Backend...")
-    # Ensure all tables exist (additive — safe to run on every startup)
     from app.database import Base, engine
-    import app.models.employee  # noqa: F401 — registers Employee, User, PaymentAttempt
-    import app.models.expertise  # noqa: F401 — registers Expertise, Title
+    import app.models.employee  # noqa: F401
+    import app.models.expertise  # noqa: F401
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Auto-seed on first boot (empty DB) so Render cold-starts work without manual steps
+    from sqlalchemy import text
+    from app.database import AsyncSessionLocal
+    async with AsyncSessionLocal() as session:
+        count = (await session.execute(text("SELECT COUNT(*) FROM expertises"))).scalar()
+    if count == 0:
+        logger.info("Empty database detected — running seed...")
+        from app.seed.load_expertise import seed_expertise
+        from app.seed.load_titles import seed_titles
+        from app.seed.load_employees import seed_employees
+        from app.seed.load_users import seed_users
+        await seed_expertise()
+        await seed_titles()
+        await seed_employees()
+        await seed_users()
+        logger.info("Seed complete.")
+
     yield
     logger.info("Shutting down CASSOR HRM Backend...")
 
