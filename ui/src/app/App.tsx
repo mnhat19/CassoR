@@ -10,7 +10,7 @@ import { TalentRadarPage } from './components/TalentRadarPage';
 import { AuthPage } from './components/AuthPage';
 import { ProfilePage } from './components/ProfilePage';
 import { HelpPage } from './components/HelpPage';
-import { getAuthToken, getProfile, logout } from './api';
+import { getAuthToken, getProfile, logout, WAKE_UP_ERROR } from './api';
 import type { AuthResponse, UserProfile } from './types';
 import logoUrl from '../assets/Logo.svg';
 
@@ -51,6 +51,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [authLoading, setAuthLoading] = useState(Boolean(getAuthToken()));
+  const [wakingUp, setWakingUp] = useState(false);
 
   useEffect(() => {
     if (!getAuthToken()) return;
@@ -58,13 +59,19 @@ export default function App() {
     getProfile()
       .then(profile => {
         if (!active) return;
+        setWakingUp(false);
         setUser(profile);
         if (!canAccessTalentRadar(profile) && page === 'talent-radar') {
           setPage('my-career');
         }
       })
-      .catch(() => {
-        if (active) setUser(null);
+      .catch((err: unknown) => {
+        if (!active) return;
+        if (err instanceof Error && err.message === WAKE_UP_ERROR) {
+          setWakingUp(true);
+        } else {
+          setUser(null);
+        }
       })
       .finally(() => {
         if (active) setAuthLoading(false);
@@ -85,10 +92,21 @@ export default function App() {
     setPage('explore');
   }
 
-  if (authLoading) {
+  if (authLoading || wakingUp) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center text-sm text-muted-foreground">
-        Đang kiểm tra phiên đăng nhập...
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-sm font-medium text-foreground">
+            {wakingUp ? 'Backend đang khởi động...' : 'Đang kiểm tra phiên đăng nhập...'}
+          </p>
+          {wakingUp && (
+            <p className="text-xs text-muted-foreground max-w-xs">
+              Server miễn phí cần 30–60 giây để khởi động sau thời gian không hoạt động.
+              Vui lòng chờ, trang sẽ tự tải lại.
+            </p>
+          )}
+        </div>
       </div>
     );
   }

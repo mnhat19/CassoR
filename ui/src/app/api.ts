@@ -26,16 +26,29 @@ export function setAuthToken(token: string | null): void {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+const WAKE_UP_ERROR = '__WAKING_UP__';
+
+async function fetchJson<T>(path: string, init?: RequestInit, _attempt = 0): Promise<T> {
   const url = `${API_BASE_URL.replace(/\/$/, '')}${path}`;
-  const response = await fetch(url, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
-      ...(init?.headers || {}),
-    },
-    ...init,
-  });
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
+        ...(init?.headers || {}),
+      },
+      ...init,
+    });
+  } catch {
+    // Network error = Render cold-starting. Retry up to 6x (≈60s total).
+    if (_attempt < 6) {
+      await new Promise(r => setTimeout(r, 10_000));
+      return fetchJson<T>(path, init, _attempt + 1);
+    }
+    throw new Error(WAKE_UP_ERROR);
+  }
 
   if (!response.ok) {
     const text = await response.text();
@@ -51,6 +64,8 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   return (await response.json()) as T;
 }
+
+export { WAKE_UP_ERROR };
 
 export async function login(username: string, password: string): Promise<AuthResponse> {
   const response = await fetchJson<AuthResponse>('/api/v1/auth/login', {

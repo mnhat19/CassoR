@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Lock, UserPlus } from 'lucide-react';
-import { login, register } from '../api';
+import { login, register, WAKE_UP_ERROR } from '../api';
 import type { AuthResponse } from '../types';
 
 interface Props {
@@ -31,7 +31,11 @@ export function AuthPage({ onAuthenticated }: Props) {
           });
       onAuthenticated(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không thể xác thực.');
+      if (err instanceof Error && err.message === WAKE_UP_ERROR) {
+        setError('Backend đang khởi động (30–60 giây), vui lòng thử lại sau giây lát.');
+      } else {
+        setError(err instanceof Error ? err.message : 'Không thể xác thực.');
+      }
     } finally {
       setLoading(false);
     }
