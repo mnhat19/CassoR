@@ -107,8 +107,17 @@ export function AuthPage({ onAuthenticated }: Props) {
         </button>
 
         <div className="mt-5 rounded-md bg-muted/50 border border-border p-3 text-xs text-muted-foreground space-y-1">
-          <div>Tài khoản mẫu: employee / hr / leadership</div>
-          <div>Mật khẩu mặc định: ChangeMe123!</div>
+          <div className="font-medium text-foreground/70">Tài khoản mẫu (đăng nhập):</div>
+          <div>employee · hr · leadership — mật khẩu: <span className="font-mono">ChangeMe123!</span></div>
+          {mode === 'register' && (
+            <>
+              <div className="font-medium text-foreground/70 pt-1">Mã nhân viên hợp lệ:</div>
+              <div className="font-mono">demo_employee · demo_lead · demo_hr</div>
+              <div className="font-mono">demo_tech_lead · demo_product · demo_accounting</div>
+              <div className="font-mono">demo_support · demo_intern</div>
+              <div className="pt-1 text-muted-foreground/70">(Để trống nếu chưa có mã nhân viên)</div>
+            </>
+          )}
         </div>
       </div>
     </div>

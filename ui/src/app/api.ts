@@ -39,7 +39,14 @@ async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed: ${response.status}`);
+    let message = text;
+    try {
+      const json = JSON.parse(text);
+      if (json?.detail) message = json.detail;
+    } catch {
+      // use raw text
+    }
+    throw new Error(message || `Request failed: ${response.status}`);
   }
 
   return (await response.json()) as T;

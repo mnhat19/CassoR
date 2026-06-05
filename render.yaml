@@ -5,8 +5,10 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      # Set DATABASE_URL to your PostgreSQL connection string (Supabase or Railway)
+      # Format: postgresql+asyncpg://user:password@host:5432/dbname
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./cassor_hrm.db
+        value: postgresql+asyncpg://user:password@host:5432/cassor_hrm
       - key: LOG_LEVEL
         value: INFO
       - key: PAYMENT_BANK_NAME
@@ -22,4 +24,4 @@ services:
       - key: PAYMENT_FILE_EXPIRY_SECONDS
         value: "1800"
       - key: CORS_ORIGINS
-        value: http://localhost:5173
+        value: https://cassor.vercel.app
