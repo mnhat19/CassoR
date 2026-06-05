@@ -11,6 +11,10 @@ if _db_url.startswith("postgres://"):
     _db_url = _db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif _db_url.startswith("postgresql://"):
     _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+# asyncpg does not accept pgbouncer= as a connection kwarg — strip it
+if "pgbouncer=" in _db_url:
+    import re as _re
+    _db_url = _re.sub(r"[&?]pgbouncer=[^&]*", "", _db_url).rstrip("?")
 
 _is_postgres = _db_url.startswith("postgresql")
 engine = create_async_engine(
